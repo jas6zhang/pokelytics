@@ -1,0 +1,28 @@
+{
+    "name": "pokelytics",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev --turbopack",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@pkmn/data": "^0.9.32",
+        "@pkmn/dex": "^0.9.32",
+        "@pkmn/smogon": "^0.5.19",
+        "@pkmn/stats": "^0.2.27",
+        "lodash": "^4.17.21",
+        "next": "15.2.4",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "typescript": "^5"
+    },
+    "type": "module"
+}
