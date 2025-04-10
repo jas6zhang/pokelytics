@@ -19,8 +19,9 @@ export default function SearchInput({ defaultValue }) {
     if (!inputValue) {
       return router.push('/')
     }
-    const formattedPokemon = inputValue.toLowerCase().trim()
-    router.push(`/${formattedPokemon}`)
+    // Replace spaces with hyphens and convert to lowercase
+    const pokemonName = inputValue.toLowerCase().trim().replace(/\s+/g, '-')
+    router.push(`/${pokemonName}`)
   }
   
   const handleKeyPress = (event) => {

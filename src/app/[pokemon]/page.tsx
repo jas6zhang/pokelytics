@@ -1,12 +1,15 @@
 import Display from "../components/display";
-
-export default async function PokemonPage({ params }: { params: { pokemon: string } }) {
-  // Ensure params.pokemon is properly handled
-  // const pokemonName = params.pokemon;
+// In Next.js (App Router), folders with square brackets [] are used for dynamic routes.
+export default async function PokemonPage(props: { params: Promise<{ pokemon: string }> }) {
+  const params = await props.params;
+  
+  // Convert hyphenated Pokemon name back to a format the API can use
+  // For example, "mr-mime" should be "mr. mime" for the API
+  const pokemonName = params.pokemon.replace(/-/g, ' ');
   
   return (
     <div>
-      <Display pokemon={params.pokemon} />
+      <Display pokemon={pokemonName} />
     </div>
   );
 } 

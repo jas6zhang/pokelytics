@@ -9,12 +9,6 @@ export async function GET() {
       // 'API-Key': process.env.DATA_API_KEY,
     },
   })
-  const sprite = await fetch('https://pokeapi.co/api/v2/pokemon/ditto/sprite', {
-    headers: {
-      'Content-Type': 'application/json',
-      // 'API-Key': process.env.DATA_API_KEY,
-    },
-  })
   const data = await res.json() // converts to object
   // console.log(data)
   return Response.json({ data })
