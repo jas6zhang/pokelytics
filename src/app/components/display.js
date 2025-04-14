@@ -5,14 +5,20 @@ import _ from 'lodash';
 import Image from "next/image"
 import SearchInput from './search.js';
 import { useParams } from 'next/navigation'
+import { Textarea, Button, ButtonGroup, } from "@chakra-ui/react"
+import { Clipboard, IconButton, Input, InputGroup } from "@chakra-ui/react"
+
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Provider } from "@/components/ui/provider"
 
 export default function Display({ pokemon }) {
   // const [data, setData] = useState(null); 
   const [titleCasePokemonName, setTitleCasePokemonName] = useState(null);
+  const [inputSpecs, setInputSpecs] = useState("");
   // const [sprite, setSprite] = useState(null);
   const [basicData, setBasicData] = useState(null);
   const [competitiveData, setCompetitiveData] = useState(null);
+  const [pokemonSet, setPokemonSet] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -70,6 +76,76 @@ export default function Display({ pokemon }) {
     // setIsLoading(false);
   }, [titleCasePokemonName]);
   
+  function generateSetsWithChatGPT(input) {
+    const prompt = `Generate a competitive set for ${titleCasePokemonName} in Pokemon Scarlet and Violet. 
+    Here are some user specifications: ${input}.
+    Please generate it as copyable text that can be imported for Pokemon Showdown similar to:
+    Iron Treads @ Booster Energy  
+    Ability: Quark Drive  
+    Tera Type: Ghost  
+    EVs: 252 SpA / 4 SpD / 252 Spe  
+    Timid Nature  
+    - Stealth Rock  
+    - Steel Beam  
+    - Earth Power  
+    - Rapid Spin
+    Please also remove all text in your response not related to the import text.`;
+    // add rate limiting here
+    // logic for this should be on server side not client side
+    // const url = 'https://api.openai.com/v1/chat/completions';
+    
+    fetch('/api/gpt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    })
+      .then(async (res) => {
+      console.log("RETURNED", res)
+      if (!res.ok) {
+        throw new Error("Server error");
+      }
+      const json = await res.json(); // It reads the entire body stream of the HTTP response.
+      console.log("RETURNED2", json)
+        // const showdownText = json;
+      // const showdownText = json.choices?.[0]?.message?.content;
+      setPokemonSet(json);
+    })
+    
+    // fetch('/api/gpt', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ prompt }), // pass the prompt as expected by the server
+    // })
+    // .then((res) => res.json())
+    // .then((json) => {
+    //   console.log("GPT DATA", json);
+    //   // setData(json);
+    //   const processedData = processCompetitiveData(json);
+    //   setCompetitiveData(processedData);
+    // })
+    // .catch((err) => {
+    //   console.error("error fetching competitive api info: ", err);
+    //   setError("failed to load Pokemon stats");
+    // });
+
+    
+    // fetch(url, {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //     'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+    //   },
+    //   body: JSON.stringify({
+    //     model: 'gpt-3.5-turbo',
+    //     messages: [{ role: 'user', content: prompt }],
+    //   }),
+    // })
+    // .then(response => response.json())
+    // .then(data => console.log(data))
+    // .then(setPokemonSet(data))
+    // .catch(error => console.error('error fetching info from openai', error));
+  }
+  
   function processBasicData(data) {
     if (!data) {
       return null;
@@ -117,6 +193,16 @@ export default function Display({ pokemon }) {
     return processedData;
   };
   
+  const ClipboardIconButton = () => {
+    return (
+      <Clipboard.Trigger asChild>
+        <IconButton variant="surface" size="xs" me="-2">
+          <Clipboard.Indicator />
+        </IconButton>
+      </Clipboard.Trigger>
+    )
+  }
+    
   // check for errors
   if (error) {
     return (
@@ -139,12 +225,13 @@ export default function Display({ pokemon }) {
   console.log("BASIC", basicData)
   // console.log(competitiveData[titleCasePokemonName].moves)
   // console.log(competitiveData[titleCasePokemonName].teammates)
-  
+  console.log("SPECS", inputSpecs)
   console.log(titleCasePokemonName)
   
   // first check for the conditionals and then use ? 
   return (
     <div> 
+      <Provider>
       
       <SearchInput defaultValue={pokemon} />
       {/* data format: [{ name: 'a', value: 12 }] */}
@@ -156,7 +243,19 @@ export default function Display({ pokemon }) {
           <div className="mt-4">
             <h2 className="text-xl font-semibold">Usage Rate</h2>
             <p>{competitiveData[titleCasePokemonName].usage.toFixed(2) * 100}%</p>
-          </div>
+            </div>
+          <Textarea value={inputSpecs} onChange={(e) => setInputSpecs(e.target.value)}  placeholder="Input Some Specifications For Set" />
+            <Button onClick={() => generateSetsWithChatGPT(inputSpecs)} colorPalette="blue" variant="outline">Generate Pokemon Set</Button>
+          <Textarea value ={pokemonSet} onChange={(e) => setPokemonSet(e.target.value)} placeholder="Generated Set" />
+            <Clipboard.Root maxW="300px" value={pokemonSet}>
+              <Clipboard.Label textStyle="label">{pokemonSet}</Clipboard.Label>
+          <InputGroup endElement={<ClipboardIconButton />}>
+            <Clipboard.Input asChild>
+              <Input />
+            </Clipboard.Input>
+          </InputGroup>
+        </Clipboard.Root>
+          {/* <Textarea value={pokemonSet} onChange={(e) => setPokemonSet(e.target.value)}  placeholder="Generated Set" /> */}
           <ResponsiveContainer width="50%" height={300}>
             <BarChart layout="vertical" data={basicData[titleCasePokemonName].stats}>
               <XAxis type="number" />
@@ -207,7 +306,8 @@ export default function Display({ pokemon }) {
         </div>
       ) : (
         <div>No data found for {pokemon}</div>
-      )}
+        )}
+        </Provider>
     </div>
   );
 }
